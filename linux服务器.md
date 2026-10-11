@@ -223,9 +223,53 @@ cpu瓶颈
 
  make -C(cd,目录） -j  "$(nproc)"(当前可用的 CPU 核心数）
 
-10、程序通过./运行与后台运行有什么区别
+10、程序通过./运行与后台运行有什么区别？程序运行时，ssh突然断开会发生什么？
 
-11、程序运行时，ssh突然断开会发生什么
+   <img width="1357" height="336" alt="image" src="https://github.com/user-attachments/assets/3da71917-67d2-4896-b81b-80cbd9782272" />
+
+./server可以通过Ctrl+C向前台进程组发送 SIGINT；Ctrl+Z 通常发送 SIGTSTP，使程序暂停；终端断开时，程序通常会收到 SIGHUP 并退出
+
+./server &不可以通过CTRL+c等终止，但是kill等依旧可以
+
+Ctrl+C等只会让终端向前台进程组（只有一个）发生SIGINT
+
+当ssh断开，终端关闭会发送SIGHUP给shell，然后bash再发送给所有进程，除nohup都挂断
+
+
+11、Linux 的终端作业控制
+
+<img width="588" height="574" alt="image" src="https://github.com/user-attachments/assets/db703ebe-5e7b-49e5-8590-649e9a7eb0b7" />
+
+进程组（Process Group）：把多个进程组织起来，便于统一管理和发送信号。
+
+会话（Session）：管理一个或多个进程组，通常对应一次登录或一个终端环境。
+
+控制终端（Controlling Terminal）：与会话关联，负责终端输入、输出以及产生终端信号。
+
+信号（Signal）：控制进程运行、暂停、恢复和终止。
+
+终端是如输入输出设备，捕捉命令然后交给shell解释，shell是解释器统称，可以有bash等具体的解释器，也就是shell进程组下辖bash等进程
+
+终端和会话的关系：
+
+一个会话可以拥有一个控制终端，也可以没有控制终端（在终端中通过setsid（）创建会话），终端也是。
+
+一个控制终端在同一时刻最多关联一个会话。
+
+一个控制终端在同一时刻只有一个前台进程组。
+
+13、终端关闭，tcp连接怎么办？
+
+nohup下进程继续运行，否则会方式FIN/RST，RST要看接受缓存区是否还有数据以及SO_LINGER的设置是否为（1，0）等
+
+
+
+
+
+
+
+
+
   
 
   
