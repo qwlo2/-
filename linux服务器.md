@@ -205,7 +205,7 @@ poll:
 
 8、Linux性能优化
 
-cpu瓶颈
+cpu瓶颈：
 
   通过ps获得pid，然后通过top检测所有cpu的使用情况，如果cpu飙升，通过perf top来获取具体是那部分的cpu占比高
 
@@ -213,6 +213,27 @@ cpu瓶颈
 
   （在clodu-drive中，第一次得到了2次优化方向，对boundary的查找，在find下是O(N^2)，通过是暴力查找部署kmp，可以采用先查找\r在进行全部匹配的方法
   在时间复杂度任然是不变但是查找速度提高，通过memchr，memcmp来快速筛选，memchr 和 memcmp 都是 C 标准库中的内存操作函数。memchr 用于在指定长度的内存区域中查找某个字节，返回第一次匹配的位置（有SIMD 指令等进行优化）；memcmp 用于逐字节比较两块内存的前 n 个字节，返回负数、零或正数。与 strchr、strcmp 不同，它们不会在 '\0' 处停止，因此更适合二进制数据处理。使用时要保证内存范围合法，同时不能直接使用 memcmp 判断任意 C++ 对象的逻辑相等性，因为对象可能包含 padding、指针以及复杂的内部状态。)
+
+内存瓶颈：
+
+   先通过free -h查看有多少可获得的内存（swap是磁盘中用于内存交换的大小，将不用的暂时放这里）
+
+   然后通过vmsta 1查看si（换入内存）so的变化是否频繁，来判断换页的频率
+
+   之后watch -n 1 cat /proc/pressure/memory，some代表至少一个进程，full代表全部，查看avge阻塞时间，查看是否因为内存阻塞大部分时间，最后通过pidstst判断进程
+   
+   最后pidsat -r -p 1，观察RSS（常驻物理内存）是否一直上升来判断是否内存泄露，majflt(需要从磁盘读页的重大缺页次数/秒）
+   RSS上升+majflt升高->内存不足
+
+io瓶颈：
+
+ watch -n 1 cat /proc/pressure/io来判断阻塞时间
+
+ iostat -dxm -y 1看磁盘吞吐、延迟和队列，w_await写请求平均延迟，aqu-sz平均未完成请求队列长度
+
+
+
+   
 
 
 9、cmake，make的优化命令
